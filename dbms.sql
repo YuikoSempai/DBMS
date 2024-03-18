@@ -1,8 +1,7 @@
 DO $$
     DECLARE
-        t_name TEXT := 'tickets';
-        s_name TEXT := 'public';
-        user_name TEXT := 's100000';
+        t_name TEXT := 'zhopa';
+        s_name TEXT := 's335150';
         attr_delimeter TEXT := '------------------------------------------------------';
         prev_attr TEXT := '';
         pointer CURSOR FOR (
@@ -14,9 +13,9 @@ DO $$
                 pcstr.confrelid, -- oid таблицы, на которую ссылается (если contype = 'f')
                 patt2.attname slave_att, -- имя аттрибута
                 pclass2.relname, -- имя таблицы
-                con.conname constraint_name, -- имя констрейнта
+                pcstr.conname constraint_name, -- имя констрейнта
                 CASE
-                    WHEN con.contype = 'f' THEN 'References ' || con.confrelid::regclass::text || '(' || con.confkey[1]::regclass::text || ')'
+                    WHEN pcstr.contype = 'f' THEN 'References ' || pcstr.confrelid::regclass::text || '(' || pcstr.confkey[1]::regclass::text || ')'
                     ELSE ''
                     END AS constraint_info
             FROM pg_class pclass -- все объекты, подобные таблицам
@@ -25,8 +24,7 @@ DO $$
                      JOIN pg_namespace pn ON pclass.relnamespace = pn.oid -- +пространство имен для таблицеподобной сущности
                      LEFT JOIN pg_constraint pcstr ON patt.attrelid = pcstr.conrelid AND patt.attnum = ANY(pcstr.conkey) -- +ограничения. LEFT чтобы оставить те, что без ограничений. ANY для исключения повторов
                      LEFT JOIN pg_attribute patt2 ON pcstr.confrelid = patt2.attrelid AND pcstr.confkey[1] = patt2.attnum -- +названия аттрибутов, на которые ссылаемся через fk
-                     LEFT JOIN pg_class pclass2 ON pclass2.oid = patt2.attrelid -- +имя таблицы, на который ссылается наш fk
-                     LEFT JOIN pg_constraint con ON con.conrelid = patt.attrelid AND con.conkey[1] = patt.attnum
+                     LEFT JOIN pg_class pclass2 ON pclass2.oid = patt2.attrelid
             WHERE pclass.relname = t_name AND pn.nspname = s_name AND patt.attnum > 0
         );
     BEGIN
